@@ -30,14 +30,15 @@ if reply == 'Authentication Failed':
     exit(1)
 if reply == 'Send Block':
     print('Authentication Successful, enter Data for block formation')
-    n = input("Number of Fields: ")
-    n = int(n)
+    keys = ['Seller', 'Buyer', 'Property-ID', 'Amount']
+    n = 4
+    i = 0
     fields = {}
     while n:
-        k = input("Enter Key value: ")
-        v = input("Enter Value for Key: ")
-        fields[k]=v
-        n-=1
+        v = input("Enter " + keys[i])
+        fields[keys[i]]=v
+        n -= 1
+        i += 1
     f = open('Users.txt', 'rb')
     users = pickle.load(f)
     f.close()

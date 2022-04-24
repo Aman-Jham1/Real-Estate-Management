@@ -287,20 +287,49 @@ class Users:
         self.password = hashlib.sha256(password.encode()).hexdigest()
         self.blockChain = []
         self.serverPubKey = ''
+        self.ownershipKey = {}
     def as_dict(self):
         return {'     Username': self.username, '        Timestamp': self.timestamp }
 
     def createBlock(self, data):
         return Block(data, self.username)
-
-    def verifyTransaction(self, currentBlock):
-        print("in verify")
-        blocks = self.blockChain
-        print(currentBlock.prevHash)
-        print(blocks[-1].Hash)
-        if currentBlock.prevHash == blocks[-1].Hash:
+    
+    def zeroKnowledgeProof(transaction):
+        n = 100
+        p = 1e9 + 7
+        g = 2
+        seller_name = transaction['Seller']
+        f = open('Users.txt', 'rb')
+        users = pickle.load(f)
+        f.close()
+        for user in users:
+            if user.username == seller_name:
+                seller = user
+                break
+        propID = transaction['Property-Id']
+        
+        if propID in seller.ownershipKey:
+            x = seller.ownershipKey[propID]
+            y = pow(g, x, p)
+        else:
+            print("Seller does not own this property")
+            return False
+        count = 0
+        while n > 0:
+            r = random.randint(0, p-2)
+            h = pow(g, r, p)
+            b = random.randint(0,1)
+            s = (r + b*x) % (p-1)
+            bob = pow(g, s, p)
+            alice = (h * pow(y, b, p)) % p
+            if bob == alice:
+                count += 1
+            n -= 1
+        if count >= 80:
             return True
-        return False
+        else:
+            return False
+
 
     def verifyBlockChain(self):
         blocks = self.blockChain
@@ -308,6 +337,21 @@ class Users:
             if blocks[i].prevHash != blocks[i-1].Hash:
                 return False
         return True
+
+
+    def verifyTransaction(self, currentBlock):
+        print("in verify")
+        blocks = self.blockChain
+        print(currentBlock.prevHash)
+        print(blocks[-1].Hash)
+        if currentBlock.prevHash == blocks[-1].Hash:
+            transaction = currentBlock.jsonData
+            if zeroKnowledgeProof(transaction) == True:
+                return True
+            else:
+                False
+        return False
+
 
     def verifyPoW(self, block):
         val = hashlib.sha256((block.timestamp + block.prevHash + block.jsonData + str(block.nonce)).encode()).hexdigest()
