@@ -294,6 +294,16 @@ class Users:
     def createBlock(self, data):
         return Block(data, self.username)
     
+    def hashStringToInt(s):
+        hashValue = 0
+        p = 31
+        mod = 1e9 + 7
+        p_pow = 1
+        for i in range (s.length):
+            hashValue = (hashValue + (1 + ord(s[i]) - ord('a') * p_pow)) % mod
+            p_pow = (p_pow * p) % mod
+        return hashValue
+
     def zeroKnowledgeProof(transaction):
         n = 100
         p = 1e9 + 7
@@ -306,10 +316,11 @@ class Users:
             if user.username == seller_name:
                 seller = user
                 break
-        propID = transaction['Property-Id']
+        propID = transaction['Property-ID']
         
         if propID in seller.ownershipKey:
-            x = seller.ownershipKey[propID]
+            x1 = seller.ownershipKey[propID]
+            x = hashStringToInt(x1)
             y = pow(g, x, p)
         else:
             print("Seller does not own this property")
@@ -347,6 +358,30 @@ class Users:
         if currentBlock.prevHash == blocks[-1].Hash:
             transaction = currentBlock.jsonData
             if zeroKnowledgeProof(transaction) == True:
+                propID = transaction['Property-ID']
+                seller_name = transaction['Seller']
+                f = open('Users.txt', 'rb')
+                users = pickle.load(f)
+                f.close()
+                for user in users:
+                    if user.username == seller_name:
+                        seller = user
+                        break
+
+                privateKey = seller.ownershipKey[propID]
+                seller.ownershipKey.pop(propID)
+
+                buyer_name = transaction['Buyer']
+                f = open('Users.txt', 'rb')
+                users = pickle.load(f)
+                f.close()
+                for user in users:
+                    if user.username == buyer_name:
+                        buyer = user
+                        break
+                
+                privateKey = convertToDES(privateKey.upper())
+                buyer.ownershipKey[propID] = privateKey
                 return True
             else:
                 False
