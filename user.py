@@ -35,7 +35,7 @@ if reply == 'Send Block':
     i = 0
     fields = {}
     while n:
-        v = input("Enter " + keys[i])
+        v = input("Enter " + keys[i] + " -- ")
         fields[keys[i]]=v
         n -= 1
         i += 1

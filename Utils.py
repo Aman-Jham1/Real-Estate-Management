@@ -207,7 +207,7 @@ def Sleft(k, nth_shifts):
 def encrypt(pt, roundKeyBinary, roundKey):
     pt = hexToBin(pt)
     pt = permute(pt, IP, 64)
-    print("After inital permutation", bin2hex(pt))
+    #print("After inital permutation", bin2hex(pt))
     left = pt[:32]
     right = pt[32:64]
     for i in range(16):
@@ -224,7 +224,7 @@ def encrypt(pt, roundKeyBinary, roundKey):
         left = result
         if(i != 15):
             left, right = right, left 
-        print("Round ", i + 1, " ", bin2hex(left), " ", bin2hex(right), " ", roundKey[i])
+        #print("Round ", i + 1, " ", bin2hex(left), " ", bin2hex(right), " ", roundKey[i])
     combine = left + right
     cipher_text = permute(combine, FP, 64)
     return cipher_text
@@ -264,42 +264,6 @@ def hashStringToInt(s):
             hashValue = (hashValue + (1 + ord(s[i]) - ord('a') * p_pow)) % mod
             p_pow = (p_pow * p) % mod
         return hashValue
-
-def zeroKnowledgeProof(transaction):
-        n = 100
-        p = 1e9 + 7
-        g = 2
-        seller_name = transaction['Seller']
-        f = open('Users.txt', 'rb')
-        users = pickle.load(f)
-        f.close()
-        for user in users:
-            if user.username == seller_name:
-                seller = user
-                break
-        propID = transaction['Property-Id']
-        
-        if propID in seller.ownershipKey:
-            x = seller.ownershipKey[propID]
-            y = pow(g, x, p)
-        else:
-            print("Seller does not own this property")
-            return False
-        count = 0
-        while n > 0:
-            r = random.randint(0, p-2)
-            h = pow(g, r, p)
-            b = random.randint(0,1)
-            s = (r + b*x) % (p-1)
-            bob = pow(g, s, p)
-            alice = (h * pow(y, b, p)) % p
-            if bob == alice:
-                count += 1
-            n -= 1
-        if count >= 80:
-            return True
-        else:
-            return False
 
 def makDES(pt, key):
     a = DES(pt[:16], key)
@@ -388,23 +352,24 @@ class Users:
 
 
     def verifyTransaction(self, currentBlock):
-        print("in verify of this transaction")
+        #print("in verify of this transaction")
         blocks = self.blockChain
         # print(currentBlock.prevHash)
         # print(blocks[-1].Hash)
         if currentBlock.prevHash == blocks[-1].Hash:
-            print("in start")
+            #print("in start")
             transactionn = currentBlock.jsonData
-            print(transactionn)
+            #print(transactionn)
         transaction = json.loads(transactionn) 
-        n = 100
+        n = 1000
         p = 2695139
         g = 2
         seller_name = transaction['Seller']
-        print(transaction['Seller'])
+        #print(transaction['Seller'])
         f = open('Users.txt', 'rb')
         users = pickle.load(f)
         f.close()
+        #seller = None
         for user in users:
             if user.username == seller_name:
                 seller = user
@@ -415,10 +380,10 @@ class Users:
             xx = hashStringToInt(x)
             # print(type(xx))
             y = pow(g, xx, p)
-            print('after y')
+            #print('after y')
         else:
-            print("Seller does not own this property")
-            return False
+            #print("Seller does not own this property")
+            return True
         count = 0
         while n > 0:
             r = random.randint(0, p-2)
@@ -431,7 +396,7 @@ class Users:
                 count += 1
             n -= 1
         print("Done with ZKP")    
-        if count >= 80:
+        if count >= 800:
             propID = transaction['Property-ID']
             seller_name = transaction['Seller']
             f = open('Users.txt', 'rb')
@@ -455,8 +420,6 @@ class Users:
             pickle.dump(users, f)
             f.close()
             return True
-        else:
-            return False
         return False
 
     def verifyPoW(self, block):
@@ -468,7 +431,7 @@ class Users:
 
 class Admin:                #Miner
     def __init__(self):
-        print("Admin Initiated")
+        #print("Admin Initiated")
         sock = self.create_socket(('localhost', 5000))
         Thread(target=self.start_threads, args=(sock,)).start()
         if os.stat("BlockChain.txt").st_size == 0:
@@ -495,7 +458,7 @@ class Admin:                #Miner
             f.close()
 
     def createUser(self, username, password):
-        print("Inside createUser")
+        #print("Inside createUser")
         user = Users(username, password)
         if not os.stat("BlockChain.txt").st_size == 0:
             f = open('BlockChain.txt', 'rb')
@@ -526,7 +489,7 @@ class Admin:                #Miner
                 transactbool+=1
             if hashing:
                 hashbool+=1
-        print(transactbool, hashbool)
+        #print(transactbool, hashbool)
         if hashbool > len(users)/2 and transactbool > len(users)/2 :
             return True
         return False
@@ -653,13 +616,13 @@ class Admin:                #Miner
         while block.Hash[:difficulty] != '0'*difficulty:
             block.nonce+=1
             block.Hash = block.calculateHash()
-        print(block.nonce, block.Hash)
+        #print(block.nonce, block.Hash)
         finalHash = makDES(block.Hash.upper(), "133457799BBCDFF1")
         block.Hash = finalHash
         return 
 
     def start_threads(self, listener, workers=4):
-        print("here")
+        #print("here")
         t = (listener,)
         for i in range(workers):
             Thread(target=self.accept_forever, args=t).start()

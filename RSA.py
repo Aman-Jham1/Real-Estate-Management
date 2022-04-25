@@ -1,5 +1,5 @@
 # Large Prime Generation for RSA
-import random,math
+import random, math
 
 class RSA:
     first_primes_list =   [2, 3, 5, 7, 11, 13, 17, 19, 23, 29,
@@ -51,6 +51,7 @@ class RSA:
         # Pre generated primes
     def RSA(self, text , num , key):
         return pow(text, key, num)
+    
     def nBitRandom(self, n):
         return random.randrange(2**(n-1)+1, 2**n - 1)
     
@@ -115,31 +116,9 @@ class RSA:
                 e += 1
         return e
 
-        
     def getD(self, e, p ,q):
         return pow(e, -1, (p-1)*(q-1))
     
-# if __name__ == '__main__':
-
-#     p  = getPrime()
-#     print(p)
-#     q  = getPrime()
-#     print(q)
-
-#     # p=7
-#     # q=13
-
-#     e = getE(p,q)
-#     print("this is e : ", e)
-#     d = getD(e, p , q)
-#     print("this is d : ", d)
-
-#     text = 5
-#     print(text)
-#     C = RSA(text , p*q , e)
-#     print(C)
-#     D = RSA(C , p*q , d)
-#     print(D)
 rsa = RSA()
 
 

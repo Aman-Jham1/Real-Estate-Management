@@ -20,7 +20,6 @@ if __name__ =='__main__':
     }
 
     while True:
-        # print(choicesDict)
         print('1', choicesDict['1'])
         print('2', choicesDict['2'])
         print('3', choicesDict['3'])
@@ -44,16 +43,16 @@ if __name__ =='__main__':
             ad.createUser(username, password)
         elif inp=='2':
             f = open('Users.txt', 'rb')
+            print("All users : ")
             users = pickle.load(f)
             f.close()
             for user in users:
                 if user.username == 'Genesis':
                     currUser = user
                     break
-            print("hello from")
-            print(currUser.username)  
-            for key in currUser.ownershipKey:
-                print(key, '->', currUser.ownershipKey[key])
+            # print(currUser.username)  
+            # for key in currUser.ownershipKey:
+            #     print(key, '->', currUser.ownershipKey[key])
 
             f = open('Users.txt', 'rb')
             users = pickle.load(f)
@@ -62,14 +61,19 @@ if __name__ =='__main__':
             f.close()
             # for user in users:
             #     print(f'Username: {user.username} , Timestamp: {user.timestamp}')
+            
         elif inp=='3':
             f = open('BlockChain.txt', 'rb')
+            print()
+            print("Current Blcokchain : ")
+            print()
             blocks = pickle.load(f)
             # df = pd.DataFrame([x.as_dict() for x in blocks])
             # print("\n",df,"\n")
             f.close()
             for block in blocks:
                 print(f'{block.username} , {block.data} , {block.timestamp} , {block.Hash} , {block.prevHash}')
+                print()
                 # pr = {}
                 # pr['username'] = block.username
                 # pr['data'] = block.data
@@ -77,6 +81,8 @@ if __name__ =='__main__':
                 # pr['Hash'] = block.Hash
                 # pr['prevHash'] = block.prevHash
                 # print(repr(pr))
+            print()
+                
         elif inp=='4':
             u = input("\tEnter Username: ")
             f = open('Users.txt', 'rb')
@@ -90,6 +96,7 @@ if __name__ =='__main__':
             if currUser == '':
                 print("No such User exists!")
                 continue
+            print()
             print("User Transactions are as follows: ")
             f = open('BlockChain.txt', 'rb')
             blocks = pickle.load(f)
@@ -104,6 +111,7 @@ if __name__ =='__main__':
             # print(repr(transaction))
             for i in transaction:
                 print("\t",i)
+                print()
         elif inp=='5':
             print(f'Public Key is: {pubKey}')
         elif inp=='q':
