@@ -413,7 +413,7 @@ class Users:
         if propID in seller.ownershipKey:
             x = seller.ownershipKey[propID]
             xx = hashStringToInt(x)
-            print(type(xx))
+            # print(type(xx))
             y = pow(g, xx, p)
             print('after y')
         else:
@@ -436,24 +436,24 @@ class Users:
             seller_name = transaction['Seller']
             f = open('Users.txt', 'rb')
             users = pickle.load(f)
-            f.close()
             for user in users:
                 if user.username == seller_name:
                     seller = user
                     break
-            privateKey = seller.ownershipKey[propID]
-            seller.ownershipKey.pop(propID)
             buyer_name = transaction['Buyer']
-            f = open('Users.txt', 'rb')
-            users = pickle.load(f)
-            f.close()
             for user in users:
                 if user.username == buyer_name:
                     buyer = user
                     break
+            f.close()
+            privateKey = seller.ownershipKey[propID]
             privateKey = makDES(privateKey.upper(), "133457799BBCDFF1")
             # privateKey = convertToDES(privateKey.upper())
+            seller.ownershipKey.pop(propID)
             buyer.ownershipKey[propID] = privateKey
+            f = open('Users.txt', 'wb')
+            pickle.dump(users, f)
+            f.close()
             return True
         else:
             return False
