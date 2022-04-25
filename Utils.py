@@ -271,6 +271,7 @@ class Block:
         self.prevHash = prevHash
         self.nonce = nonce
         self.Hash = self.convertToDES(self.calculateHash().upper())
+        
     def as_dict(self):
         return {'     Username': self.username, '        Data': self.data , '     Timestamp':self.timestamp, '    Hash:': self.Hash, '         Previous Hash':self.prevHash }
 
@@ -281,29 +282,20 @@ class Block:
         return makDES(pt, "133457799BBCDFF1")
 
 class Users:
-    def __init__(self, username, password):
+    def __init__(self, username, password, ownershipKeys=None):
         self.timestamp = datetime.datetime.now().isoformat()
         self.username = username
         self.password = hashlib.sha256(password.encode()).hexdigest()
         self.blockChain = []
         self.serverPubKey = ''
-        self.ownershipKey = {}
+        self.ownershipKey = ownershipKeys
+        
     def as_dict(self):
         return {'     Username': self.username, '        Timestamp': self.timestamp }
 
     def createBlock(self, data):
         return Block(data, self.username)
     
-    def hashStringToInt(s):
-        hashValue = 0
-        p = 31
-        mod = 1e9 + 7
-        p_pow = 1
-        for i in range (s.length):
-            hashValue = (hashValue + (1 + ord(s[i]) - ord('a') * p_pow)) % mod
-            p_pow = (p_pow * p) % mod
-        return hashValue
-
     def zeroKnowledgeProof(transaction):
         n = 100
         p = 1e9 + 7
@@ -316,11 +308,10 @@ class Users:
             if user.username == seller_name:
                 seller = user
                 break
-        propID = transaction['Property-ID']
+        propID = transaction['Property-Id']
         
         if propID in seller.ownershipKey:
-            x1 = seller.ownershipKey[propID]
-            x = hashStringToInt(x1)
+            x = seller.ownershipKey[propID]
             y = pow(g, x, p)
         else:
             print("Seller does not own this property")
@@ -358,35 +349,10 @@ class Users:
         if currentBlock.prevHash == blocks[-1].Hash:
             transaction = currentBlock.jsonData
             if zeroKnowledgeProof(transaction) == True:
-                propID = transaction['Property-ID']
-                seller_name = transaction['Seller']
-                f = open('Users.txt', 'rb')
-                users = pickle.load(f)
-                f.close()
-                for user in users:
-                    if user.username == seller_name:
-                        seller = user
-                        break
-
-                privateKey = seller.ownershipKey[propID]
-                seller.ownershipKey.pop(propID)
-
-                buyer_name = transaction['Buyer']
-                f = open('Users.txt', 'rb')
-                users = pickle.load(f)
-                f.close()
-                for user in users:
-                    if user.username == buyer_name:
-                        buyer = user
-                        break
-                
-                privateKey = convertToDES(privateKey.upper())
-                buyer.ownershipKey[propID] = privateKey
                 return True
             else:
                 False
         return False
-
 
     def verifyPoW(self, block):
         val = hashlib.sha256((block.timestamp + block.prevHash + block.jsonData + str(block.nonce)).encode()).hexdigest()
@@ -403,17 +369,29 @@ class Admin:                #Miner
         if os.stat("BlockChain.txt").st_size == 0:
             f = open('BlockChain.txt', 'wb')
             block = Block("Genesis", 'admin')
+            
             pickle.dump([block], f)
             f.close()
         if os.stat("Users.txt").st_size == 0:
             f = open('Users.txt', 'wb')
-            user = self.createUser('Genesis', 'admin')
+            ownershipKeys = {}
+            ownershipKeys['V-331'] = 'E0313093AD206B375846AEE9ED250F66325506FCB743708A2CB4E8A5C62F40DC'
+            ownershipKeys['V-332'] = '906FBC38CA7D49C13EE62A0FA33A08C899568ABCFB11E2F62A0E5BF032E89CBE'
+            ownershipKeys['V-330'] = 'F3A050A9D4F7A161A575F5C06EFD135653BB20809CF3318E22B6A3E9CB8C8004'
+            ownershipKeys['V-333'] = 'FCC37918055E5E6EEAF966AB5196F32977420EEFE946A1851CA438503E01495F'
+            ownershipKeys['V-334'] = 'EF2CC80699B4354551A5A58A79E47E5F6DE94B5803D3AB522B8716C54130A054'
+            ownershipKeys['V-335'] = '31102207EDFEE978706A9A382E1A7A3114362719950637D3015595D8C62A9D0B'
+            ownershipKeys['V-336'] = '04BB08861105799ED2A5931626AF6E6B7B9E24918022DDD2F70D747423663DF5'
+            ownershipKeys['V-337'] = 'BCF9327D9E7ED46C6DF72A8499DBF2F925C6C9BCC234F59F5E75831601FD9BE9'
+            ownershipKeys['V-231'] = '38ABA67ECCCC1541E7ADB51FBC9BC045267C42249DC8B3021C23497D009D9F42'
+            ownershipKeys['M-251'] = 'BE7627BDED997F08C8E7B36660ED521A2293C31AB9C278A49AC3B7578C9D1B2C'
+            user = self.createUser('Genesis', 'admin', ownershipKeys)
             pickle.dump([user], f)
             f.close()
 
-    def createUser(self, username, password):
+    def createUser(self, username, password, ownershipKeys=None):
         print("Inside createUser")
-        user = Users(username, password)
+        user = Users(username, password, ownershipKeys)
         if not os.stat("BlockChain.txt").st_size == 0:
             f = open('BlockChain.txt', 'rb')
             blocks = pickle.load(f)
