@@ -1,6 +1,14 @@
 # Real-Estate-Management
 Securing real estate transactions data using blockchain.
 
+## Team members:
+
+* Aman Jham (2019A7PS0071H)
+
+* Jay Patel (2019A7PS0156H)
+
+* Diya Goyal (2019A7PS1327H)
+
 ```
 BlockChain.txt
 README.md
