@@ -255,48 +255,17 @@ def DES(pt, key):
     # print("Cipher Text : ",cipher_text)
     return cipher_text
 
-def makDES(pt, key):
-    a = DES(pt[:16], key)
-    b = DES(pt[16:32], key)
-    c = DES(pt[32:48], key)
-    d = DES(pt[48:64], key)
-    return a+b+c+d
+def hashStringToInt(s):
+        hashValue = 0
+        p = 31
+        mod = 1000000007
+        p_pow = 1
+        for i in range(len(s)):
+            hashValue = (hashValue + (1 + ord(s[i]) - ord('a') * p_pow)) % mod
+            p_pow = (p_pow * p) % mod
+        return hashValue
 
-class Block:
-    def __init__(self, data, username, prevHash='0', nonce = 0):
-        self.username = username
-        self.data = data
-        self.jsonData = json.dumps(data)
-        self.timestamp = datetime.datetime.now().isoformat()
-        self.prevHash = prevHash
-        self.nonce = nonce
-        self.Hash = self.convertToDES(self.calculateHash().upper())
-        
-    def as_dict(self):
-        return {'     Username': self.username, '        Data': self.data , '     Timestamp':self.timestamp, '    Hash:': self.Hash, '         Previous Hash':self.prevHash }
-
-    def calculateHash(self):
-        return hashlib.sha256((self.timestamp + self.prevHash + self.jsonData + str(self.nonce)).encode()).hexdigest()
-
-    def convertToDES(self, pt):
-        return makDES(pt, "133457799BBCDFF1")
-
-class Users:
-    def __init__(self, username, password, ownershipKeys=None):
-        self.timestamp = datetime.datetime.now().isoformat()
-        self.username = username
-        self.password = hashlib.sha256(password.encode()).hexdigest()
-        self.blockChain = []
-        self.serverPubKey = ''
-        self.ownershipKey = ownershipKeys
-        
-    def as_dict(self):
-        return {'     Username': self.username, '        Timestamp': self.timestamp }
-
-    def createBlock(self, data):
-        return Block(data, self.username)
-    
-    def zeroKnowledgeProof(transaction):
+def zeroKnowledgeProof(transaction):
         n = 100
         p = 1e9 + 7
         g = 2
@@ -332,6 +301,83 @@ class Users:
         else:
             return False
 
+def makDES(pt, key):
+    a = DES(pt[:16], key)
+    b = DES(pt[16:32], key)
+    c = DES(pt[32:48], key)
+    d = DES(pt[48:64], key)
+    return a+b+c+d
+
+class Block:
+    def __init__(self, data, username, prevHash='0', nonce = 0):
+        self.username = username
+        self.data = data
+        self.jsonData = json.dumps(data)
+        self.timestamp = datetime.datetime.now().isoformat()
+        self.prevHash = prevHash
+        self.nonce = nonce
+        self.Hash = self.convertToDES(self.calculateHash().upper())
+        
+    def as_dict(self):
+        return {'     Username': self.username, '        Data': self.data , '     Timestamp':self.timestamp, '    Hash:': self.Hash, '         Previous Hash':self.prevHash }
+
+    def calculateHash(self):
+        return hashlib.sha256((self.timestamp + self.prevHash + self.jsonData + str(self.nonce)).encode()).hexdigest()
+
+    def convertToDES(self, pt):
+        return makDES(pt, "133457799BBCDFF1")
+
+class Users:
+    def __init__(self, username, password):
+        self.timestamp = datetime.datetime.now().isoformat()
+        self.username = username
+        self.password = hashlib.sha256(password.encode()).hexdigest()
+        self.blockChain = []
+        self.serverPubKey = ''
+        self.ownershipKey = {}
+        
+    def as_dict(self):
+        return {'     Username': self.username, '        Timestamp': self.timestamp }
+
+    def createBlock(self, data):
+        return Block(data, self.username)
+    
+    # def zeroKnowledgeProof(transaction):
+    #     n = 100
+    #     p = 1e9 + 7
+    #     g = 2
+    #     seller_name = transaction['Seller']
+    #     f = open('Users.txt', 'rb')
+    #     users = pickle.load(f)
+    #     f.close()
+    #     for user in users:
+    #         if user.username == seller_name:
+    #             seller = user
+    #             break
+    #     propID = transaction['Property-Id']
+        
+    #     if propID in seller.ownershipKey:
+    #         x = seller.ownershipKey[propID]
+    #         y = pow(g, x, p)
+    #     else:
+    #         print("Seller does not own this property")
+    #         return False
+    #     count = 0
+    #     while n > 0:
+    #         r = random.randint(0, p-2)
+    #         h = pow(g, r, p)
+    #         b = random.randint(0,1)
+    #         s = (r + b*x) % (p-1)
+    #         bob = pow(g, s, p)
+    #         alice = (h * pow(y, b, p)) % p
+    #         if bob == alice:
+    #             count += 1
+    #         n -= 1
+    #     if count >= 80:
+    #         return True
+    #     else:
+    #         return False
+
 
     def verifyBlockChain(self):
         blocks = self.blockChain
@@ -342,16 +388,75 @@ class Users:
 
 
     def verifyTransaction(self, currentBlock):
-        print("in verify")
+        print("in verify of this transaction")
         blocks = self.blockChain
-        print(currentBlock.prevHash)
-        print(blocks[-1].Hash)
+        # print(currentBlock.prevHash)
+        # print(blocks[-1].Hash)
         if currentBlock.prevHash == blocks[-1].Hash:
-            transaction = currentBlock.jsonData
-            if zeroKnowledgeProof(transaction) == True:
-                return True
-            else:
-                False
+            print("in start")
+            transactionn = currentBlock.jsonData
+            print(transactionn)
+        transaction = json.loads(transactionn) 
+        n = 100
+        p = 2695139
+        g = 2
+        seller_name = transaction['Seller']
+        print(transaction['Seller'])
+        f = open('Users.txt', 'rb')
+        users = pickle.load(f)
+        f.close()
+        for user in users:
+            if user.username == seller_name:
+                seller = user
+                break   
+        propID = transaction['Property-ID']
+        if propID in seller.ownershipKey:
+            x = seller.ownershipKey[propID]
+            xx = hashStringToInt(x)
+            print(type(xx))
+            y = pow(g, xx, p)
+            print('after y')
+        else:
+            print("Seller does not own this property")
+            return False
+        count = 0
+        while n > 0:
+            r = random.randint(0, p-2)
+            h = pow(g, r, p)
+            b = random.randint(0, 1)
+            s = (r + b*xx) % (p-1)
+            bob = pow(g, s, p)
+            alice = (h * pow(y, b, p)) % p
+            if bob == alice:
+                count += 1
+            n -= 1
+        print("Done with ZKP")    
+        if count >= 80:
+            propID = transaction['Property-ID']
+            seller_name = transaction['Seller']
+            f = open('Users.txt', 'rb')
+            users = pickle.load(f)
+            f.close()
+            for user in users:
+                if user.username == seller_name:
+                    seller = user
+                    break
+            privateKey = seller.ownershipKey[propID]
+            seller.ownershipKey.pop(propID)
+            buyer_name = transaction['Buyer']
+            f = open('Users.txt', 'rb')
+            users = pickle.load(f)
+            f.close()
+            for user in users:
+                if user.username == buyer_name:
+                    buyer = user
+                    break
+            privateKey = makDES(privateKey.upper(), "133457799BBCDFF1")
+            # privateKey = convertToDES(privateKey.upper())
+            buyer.ownershipKey[propID] = privateKey
+            return True
+        else:
+            return False
         return False
 
     def verifyPoW(self, block):
@@ -389,9 +494,9 @@ class Admin:                #Miner
             pickle.dump([user], f)
             f.close()
 
-    def createUser(self, username, password, ownershipKeys=None):
+    def createUser(self, username, password):
         print("Inside createUser")
-        user = Users(username, password, ownershipKeys)
+        user = Users(username, password)
         if not os.stat("BlockChain.txt").st_size == 0:
             f = open('BlockChain.txt', 'rb')
             blocks = pickle.load(f)
